@@ -1,14 +1,14 @@
 # Token types
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, PLUS, MINUS, EOF = 'INTEGER', 'PLUS', 'MINUS', 'EOF'
+INTEGER, PLUS, MINUS, DIV, MUL, EOF = 'INTEGER', 'PLUS', 'MINUS','DIV','MUL', 'EOF'
 
 
 class Token(object):
     def __init__(self, type, value):
-        # token type: INTEGER, PLUS, MINUS, or EOF
+        # token type: INTEGER, PLUS, MINUS, DIV, MUL or EOF
         self.type = type
-        # token value: non-negative integer value, '+', '-', or None
+        # token value: non-negative integer value, '+', '-','*','/' or None
         self.value = value
 
     def __str__(self):
@@ -18,6 +18,8 @@ class Token(object):
             Token(INTEGER, 3)
             Token(PLUS '+')
             Token(MINUS '-')
+            Token(DIV '/')
+            Token(MUL '*')
         """
         return 'Token({type}, {value})'.format(
             type=self.type,
@@ -84,6 +86,13 @@ class Interpreter(object):
             if self.current_char == '-':
                 self.advance()
                 return Token(MINUS, '-')
+            if self.current_char == '/':
+                self.advance()
+                return Token(DIV, '/')
+
+            if self.current_char == '*':
+                self.advance()
+                return Token(MUL, '*')
 
             self.error()
 
@@ -99,10 +108,14 @@ class Interpreter(object):
         else:
             self.error()
 
+
     def expr(self): 
         """Parser / Interpreter"""
         """expr -> INTEGER PLUS INTEGER"""
         """expr -> INTEGER MINUS INTEGER"""
+        """expr -> INTEGER DIV INTEGER"""
+        """expr -> INTEGER MUL INTEGER"""
+
         # set current token to the first token taken from the input
         self.current_token = self.get_next_token()
 
@@ -114,8 +127,12 @@ class Interpreter(object):
         op = self.current_token
         if op.type == PLUS:
             self.eat(PLUS)
-        else:
+        elif op.type == MINUS:
             self.eat(MINUS)
+        elif op.type == DIV:
+            self.eat(DIV)
+        else:
+            self.eat(MUL)
 
         # we expect the current token to be a single-digit integer
         right = self.current_token
@@ -130,8 +147,12 @@ class Interpreter(object):
         if op.type == PLUS:
             result = left.value + right.value
             return result
-        else:
+        elif op.type == MINUS:
             result = left.value - right.value
+        elif op.type == DIV:
+            result = left.value / right.value
+        else:
+            result = left.value * right.value
         return result
 
 def main():
